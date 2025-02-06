@@ -14,9 +14,11 @@ import java.util.Properties;
 
 public class Util {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/mydbtest";
+    private static final String URL = "jdbc:mysql://localhost:3306/mydbtest?useSSL=false";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
+    private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
+    private static final String DIALECT = "org.hibernate.dialect.MySQL5Dialect";
 
     private static SessionFactory sessionFactory;
 
@@ -33,6 +35,15 @@ public class Util {
         return connection;
     }
 
+    public static void closeConnection(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public static SessionFactory getSessionFactory() {
 
@@ -42,17 +53,16 @@ public class Util {
                 Configuration configuration = new Configuration();
                 Properties properties = new Properties();
 
-                properties.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-                properties.put(Environment.URL, "jdbc:mysql://localhost:3306/mydbtest?useSSL=false");
-                properties.put(Environment.USER, "root");
-                properties.put(Environment.PASS, "root");
-                properties.put(Environment.DIALECT, "org.hibernate.dialect.MySQL5Dialect");
+                properties.put(Environment.DRIVER, DRIVER);
+                properties.put(Environment.URL, URL);
+                properties.put(Environment.USER, USERNAME);
+                properties.put(Environment.PASS, PASSWORD);
+                properties.put(Environment.DIALECT, DIALECT);
                 properties.put(Environment.SHOW_SQL, "true");
                 properties.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
                 properties.put(Environment.HBM2DDL_AUTO, "");
 
                 configuration.setProperties(properties);
-
                 configuration.addAnnotatedClass(User.class);
 
                 ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
@@ -66,4 +76,11 @@ public class Util {
 
         return sessionFactory;
     }
+
+    public static void closeSessionFactory() {
+        if (sessionFactory != null) {
+            sessionFactory.close();
+        }
+    }
+
 }
