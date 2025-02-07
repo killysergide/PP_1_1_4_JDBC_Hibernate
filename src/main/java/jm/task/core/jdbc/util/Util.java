@@ -20,12 +20,14 @@ public class Util {
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String DIALECT = "org.hibernate.dialect.MySQL5Dialect";
 
+    private static Connection connection;
     private static SessionFactory sessionFactory;
 
+    private Util() {
+
+    }
 
     public static Connection getConnection() {
-        Connection connection = null;
-
         try {
             connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
         } catch (SQLException e) {
@@ -35,7 +37,7 @@ public class Util {
         return connection;
     }
 
-    public static void closeConnection(Connection connection) {
+    public static void closeConnection() {
         if (connection != null) {
             try {
                 connection.close();

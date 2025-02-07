@@ -41,10 +41,11 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        try {
+
+        try (PreparedStatement preparedStatement =
+                     connection.prepareStatement("INSERT INTO users (name, lastname, age) VALUES (?, ?, ?)")) {
+
             connection.setAutoCommit(false);
-            PreparedStatement preparedStatement =
-                    connection.prepareStatement("INSERT INTO users (name, lastname, age) VALUES (?, ?, ?)");
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setInt(3, age);
@@ -69,10 +70,8 @@ public class UserDaoJDBCImpl implements UserDao {
     @Override
     public void removeUserById(long id) {
 
-        try {
-            String sql = "DELETE FROM users WHERE id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM users WHERE id = ?")) {
             connection.setAutoCommit(false);
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
             connection.commit();
@@ -119,24 +118,10 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        try {
-            connection.setAutoCommit(false);
-            Statement statement = connection.createStatement();
+        try (Statement statement = connection.createStatement();) {
             statement.executeUpdate("TRUNCATE users");
-            connection.commit();
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackEx) {
-                throw new RuntimeException("Rollback failed", rollbackEx);
-            }
-            throw new RuntimeException("Error cleaning users table", e);
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException ex) {
-                throw new RuntimeException("Failed to set auto-commit back to true", ex);
-            }
+            throw new RuntimeException(e);
         }
     }
 }

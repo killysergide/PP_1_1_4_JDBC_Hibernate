@@ -6,6 +6,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -67,17 +68,19 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
+        Transaction transaction = null;
         try (Session session = Util.getSessionFactory().openSession()) {
-            Transaction transaction = session.beginTransaction();
+            transaction = session.beginTransaction();
             User user = session.get(User.class, id);
 
             if (user != null) {
                 session.delete(user);
                 transaction.commit();
-            } else {
-                transaction.rollback();
             }
         } catch (HibernateException e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
         }
     }
@@ -88,22 +91,19 @@ public class UserDaoHibernateImpl implements UserDao {
             return session.createQuery("from User", User.class).list();
         } catch (HibernateException e) {
             e.printStackTrace();
-            return null;
+            return new ArrayList<>();
         }
     }
 
     @Override
     public void cleanUsersTable() {
-        Transaction transaction = null;
+        Transaction transaction;
         try (Session session = Util.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
             String sql = "TRUNCATE TABLE users";
             session.createSQLQuery(sql).executeUpdate();
             transaction.commit();
         } catch (HibernateException e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
             e.printStackTrace();
         }
     }
